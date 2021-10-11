@@ -33,9 +33,11 @@ class RandomWalk:
             current = walk[-1]
 
             neighbors = list(self.graph.neighbors(current))
-
+            
             next = np.random.choice(neighbors)
             walk.append(next)
+            
+        return walk
 
 class LazyRandomWalk:
     

@@ -15,8 +15,7 @@ def load_cora():
 
     return graph, labels
 
-def run_lrw_walks():
-    walk_path = 'temp/lrw-walks.npy'
+def run_personalized_walks(walk_path):
 
     walks = np.load(walk_path).tolist()
     
@@ -30,7 +29,7 @@ def run_lrw_walks():
     return np.array(vectors)
 
 def run_node2vec(graph):
-    node2vec = Node2Vec(graph, dimensions=128, walk_length=80, num_walks=10, p=0.5, q=0.25, workers=6)
+    node2vec = Node2Vec(graph, dimensions=128, walk_length=80, num_walks=10, p=0.5, q=0.25, workers=6, quiet=True)
 
     word2vec = node2vec.fit(negative=5, window=8)
 
@@ -74,7 +73,7 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
 def main():
     graph, labels = load_cora()
 
-    embeddings = run_lrw_walks()
+    embeddings = run_personalized_walks(walk_path='temp/lrw-walks.npy')
 
     print('----- Lazy Random Walks -----')
     run_classifier(embeddings, labels, train_ratio=0.8)
@@ -84,6 +83,11 @@ def main():
     run_classifier(embeddings, labels, train_ratio=0.8)
 
 
+    embeddings = run_personalized_walks(walk_path='temp/random-walks.npy')
+
+    print('----- Random Walks (Deepwalk) -----')
+    run_classifier(embeddings, labels, train_ratio=0.8)
+
+
 if __name__ == '__main__':
-    # TODO: test against Deepwalk
     main()
