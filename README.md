@@ -14,7 +14,7 @@ We applied a tweaked verion of lazy random walk to generate walks from a given g
 ### Tweaked Version
 We adapt the previously defined weight between any given nodes as follows:
 
-- `gi` if the feature vector for node `i`.
+- ![](https://latex.codecogs.com/gif.latex?%5Cdpi%7B120%7D%20%5Clarge%20g_i) if the feature vector for node !()[https://latex.codecogs.com/gif.latex?%5Cdpi%7B120%7D%20%5Clarge%20i%20%5Cin%20V].
 - we extend the L2 norm to be any user defined similarity function
 
 ### Project Requirements
