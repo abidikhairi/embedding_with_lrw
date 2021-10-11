@@ -24,7 +24,7 @@ def main():
 
     np_walks = np.array(walks)
 
-    np.save('temp/lrw-walks.npx', np_walks)
+    np.save('temp/lrw-walks', np_walks)
 
 if __name__ == '__main__':
     main()
