@@ -5,6 +5,38 @@ from scipy.spatial.distance import cosine
 from operator import itemgetter
 from tqdm import tqdm
 
+
+class RandomWalk:
+    def __init__(self, graph: nx.Graph, num_walks: int = 10, walk_length: int = 80) -> None:
+        r"""
+            Generate randomly uniform random walks
+        """
+        self.graph = graph
+        self.num_walks = num_walks
+        self.walk_length = walk_length
+
+    def simulate_walks(self):
+        walks = []
+
+        for _ in tqdm(range(self.num_walks), desc='Generating Walks'):
+            for node in self.graph.nodes():
+                walks.append(self._walk(node))
+        
+        return walks
+
+
+    def _walk(self, start):
+        length = self.walk_length
+        walk = [start]
+
+        while len(walk) < length:
+            current = walk[-1]
+
+            neighbors = list(self.graph.neighbors(current))
+
+            next = np.random.choice(neighbors)
+            walk.append(next)
+
 class LazyRandomWalk:
     
     def __init__(self, graph: nx.Graph, num_walks: int = 10, walk_length: int = 80, sigma: float = 0.2, alpha: float = 0.2, similarity = cosine) -> None:

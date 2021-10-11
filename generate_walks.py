@@ -2,7 +2,7 @@ import numpy as np
 from dgl.data import CoraGraphDataset
 from scipy.spatial.distance import hamming
 
-from walker import LazyRandomWalk
+from walker import LazyRandomWalk, RandomWalk
 
 
 def load_cora():
@@ -25,6 +25,11 @@ def main():
     np_walks = np.array(walks)
 
     np.save('temp/lrw-walks', np_walks)
+
+    walks = RandomWalk(graph).simulate_walks()
+    np_walks = np.array(walks)
+
+    np.save('temp/random-walks', np_walks)
 
 if __name__ == '__main__':
     main()
