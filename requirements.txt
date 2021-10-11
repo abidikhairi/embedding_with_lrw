@@ -1,5 +1,7 @@
-torch
 dgl
 wandb
 numpy
+node2vec
+gensim
+scikit-learn
 matplotlib
