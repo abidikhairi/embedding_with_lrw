@@ -41,14 +41,14 @@ class RandomWalk:
 
 class LazyRandomWalk:
     
-    def __init__(self, graph: nx.Graph, num_walks: int = 10, walk_length: int = 80, sigma: float = 0.2, alpha: float = 0.2, similarity = cosine) -> None:
+    def __init__(self, graph: nx.Graph, walk_length: int = 80, sigma: float = 0.2, alpha: float = 0.2, similarity = [cosine]) -> None:
         r"""
             Source: https://arxiv.org/abs/2008.03639
             section: III-A-3
         """
 
         self.graph = graph
-        self.num_walks = num_walks # FIXME: Non probilistic remove if process is determinist
+        self.num_walks = len(similarity)
         self.walk_length = walk_length
         self.sigma = sigma
         self.alpha = alpha
@@ -67,24 +67,27 @@ class LazyRandomWalk:
             feat_u = data['node_attr']
             w = []
             
-            for neighbor in neighbors:
-                feat_v = self.graph.nodes[neighbor]['node_attr']
-                wij = np.exp(self.similarity(feat_u, feat_v) / 2 * (self.sigma ** 2))
-                w.append(wij)
-            di = sum(w)
+            for i in range(self.num_walks):
+                for neighbor in neighbors:
+                    feat_v = self.graph.nodes[neighbor]['node_attr']
+                    wij = np.exp(self.similarity[i](feat_u, feat_v) / 2 * (self.sigma ** 2))
+                    w.append(wij)
+                
+                di = sum(w)
 
-            self.graph.nodes[node]['d'] = di
+                self.graph.nodes[node]['d_{}'.format(i)] = di
 
     def simulate_walks(self):
         walks = []
 
-        for node in tqdm(self.graph.nodes(), desc='Generating Walks'):
-            walks.append(self._walk(node))
+        for i in range(self.num_walks):
+            for node in tqdm(self.graph.nodes(), desc='Generating Walks'):
+                walks.append(self._walk(node, i))
         
         return walks
             
 
-    def _walk(self, start):
+    def _walk(self, start, index):
         length = self.walk_length
         walk = [start]
 
@@ -93,13 +96,13 @@ class LazyRandomWalk:
             P = []
 
             feat_u = self.graph.nodes[current]['node_attr']
-            di = self.graph.nodes[current]['d']
+            di = self.graph.nodes[current]['d_{}'.format(index)]
             neighbors = self.graph.neighbors(current)
 
             for neighbor in neighbors:
                 feat_v = self.graph.nodes[neighbor]['node_attr']
                 
-                wij = np.exp(self.similarity(feat_u, feat_v) / 2 * (self.sigma ** 2))
+                wij = np.exp(self.similarity[index](feat_u, feat_v) / 2 * (self.sigma ** 2))
 
                 P.append((neighbor, (self.alpha * wij) / di))
 
