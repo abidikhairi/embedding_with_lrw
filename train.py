@@ -5,11 +5,19 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import SGDClassifier
 
-from dgl.data import CoraGraphDataset
+from dgl.data import CoraGraphDataset, CiteseerGraphDataset
 
+np.random.seed(1234)
 
 def load_cora():
     dataset = CoraGraphDataset(verbose=False)
+    graph = dataset[0].to_networkx().to_undirected()
+    labels = dataset[0].ndata['label'].numpy()
+
+    return graph, labels
+
+def load_citeseer():
+    dataset = CiteseerGraphDataset(verbose=False)
     graph = dataset[0].to_networkx().to_undirected()
     labels = dataset[0].ndata['label'].numpy()
 
@@ -64,16 +72,16 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
     print('-'*120)
     print(f'OneVsRest Classifier')
     print(f'\t\t\t: Train Size: {train_ratio * 100} %')
-    print(f'\t\t\t: Train Accuracy: {np.mean(train_accuracies)}')
-    print(f'\t\t\t: Test Accuracy: {np.mean(test_accuracies)}')
+    print('\t\t\t: Train Accuracy: {:.4f} %'.format(np.mean(train_accuracies) * 100))
+    print('\t\t\t: Test Accuracy: {:.4f} %'.format(np.mean(test_accuracies) * 100))
     print('-'*120)
 
 
 
 def main():
-    graph, labels = load_cora()
+    graph, labels = load_citeseer()
 
-    embeddings = run_personalized_walks(walk_path='temp/lrw-walks.npy')
+    embeddings = run_personalized_walks(walk_path='temp/citeseer-lrw-walks.npy')
 
     print('----- Lazy Random Walks -----')
     run_classifier(embeddings, labels, train_ratio=0.8)
@@ -83,7 +91,7 @@ def main():
     run_classifier(embeddings, labels, train_ratio=0.8)
 
 
-    embeddings = run_personalized_walks(walk_path='temp/random-walks.npy')
+    embeddings = run_personalized_walks(walk_path='temp/citeseer-random-walks.npy')
 
     print('----- Random Walks (Deepwalk) -----')
     run_classifier(embeddings, labels, train_ratio=0.8)
