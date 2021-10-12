@@ -7,7 +7,6 @@ from sklearn.linear_model import SGDClassifier
 
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset
 
-np.random.seed(1234)
 
 def load_cora():
     dataset = CoraGraphDataset(verbose=False)
@@ -89,13 +88,6 @@ def main():
     print('----- Node2Vec Walks -----')
     embeddings = run_node2vec(graph)
     run_classifier(embeddings, labels, train_ratio=0.8)
-
-
-    embeddings = run_personalized_walks(walk_path='temp/citeseer-random-walks.npy')
-
-    print('----- Random Walks (Deepwalk) -----')
-    run_classifier(embeddings, labels, train_ratio=0.8)
-
 
 if __name__ == '__main__':
     main()
