@@ -1,11 +1,12 @@
+import dgl
 import numpy as np
 from node2vec import Node2Vec
 from gensim.models import Word2Vec
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from sklearn.linear_model import SGDClassifier
+from sklearn.linear_model import SGDClassifier, LogisticRegression
 
-from dgl.data import CoraGraphDataset, CiteseerGraphDataset
+from dgl.data import CoraGraphDataset, CiteseerGraphDataset, FraudYelpDataset
 
 
 def load_cora():
@@ -22,6 +23,14 @@ def load_citeseer():
 
     return graph, labels
 
+def load_yelp():
+    dataset = FraudYelpDataset()
+
+    graph = dgl.to_homogeneous(dataset[0]).to_networkx().to_undirected()
+    labels = dataset[0].ndata['label'].numpy()
+
+    return graph, labels.ravel()
+
 def run_personalized_walks(walk_path):
 
     walks = np.load(walk_path).tolist()
@@ -36,7 +45,7 @@ def run_personalized_walks(walk_path):
     return np.array(vectors)
 
 def run_node2vec(graph):
-    node2vec = Node2Vec(graph, dimensions=128, walk_length=80, num_walks=10, p=0.5, q=0.25, workers=6, quiet=True)
+    node2vec = Node2Vec(graph, dimensions=128, walk_length=80, num_walks=10, p=0.5, q=0.25, workers=6)
 
     word2vec = node2vec.fit(negative=5, window=8)
 
@@ -56,11 +65,12 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
 
     train_accuracies = [] 
     test_accuracies = []
+    
+
+    classifier = LogisticRegression(multi_class='ovr', n_jobs=7)
             
-    classifier = SGDClassifier(loss='log', n_jobs=6)
-            
-    for _ in range(100):
-        classifier = classifier.partial_fit(x_train, y_train, classes=labels)
+    for _ in range(5):
+        classifier = classifier.fit(x_train, y_train, classes=labels)
                 
         train_acc = accuracy_score(y_train, classifier.predict(x_train))
         test_acc = accuracy_score(y_test, classifier.predict(x_test))
@@ -78,7 +88,7 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
 
 
 def main():
-    graph, labels = load_citeseer()
+    graph, labels = load_yelp()
 
     embeddings = run_personalized_walks(walk_path='temp/citeseer-lrw-walks.npy')
 

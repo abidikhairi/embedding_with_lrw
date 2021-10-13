@@ -1,6 +1,7 @@
+import dgl
 import numpy as np
-from dgl.data import CoraGraphDataset, CiteseerGraphDataset
-from scipy.spatial.distance import hamming, cosine
+from dgl.data import CoraGraphDataset, CiteseerGraphDataset, FraudYelpDataset
+from scipy.spatial.distance import hamming, cosine, euclidean
 
 from walker import LazyRandomWalk, RandomWalk
 
@@ -21,22 +22,28 @@ def load_citeseer():
 
     return graph, features
 
+def load_yelp():
+    dataset = FraudYelpDataset()
+    
+    graph = dgl.to_homogeneous(dataset[0]).to_networkx().to_undirected()
+    features = dataset[0].ndata['feature'].numpy()
+
+    return graph, features
+
 def main():
-    graph, features = load_citeseer()
+    graph, features = load_yelp()
 
     for node, _ in graph.nodes(data=True):
-        graph.nodes[node]['node_attr'] = features[node].numpy()
+        if hasattr(features[node], 'numpy'):
+            graph.nodes[node]['node_attr'] = features[node].numpy()
+        else:
+            graph.nodes[node]['node_attr'] = features[node]
 
-    walks = LazyRandomWalk(graph, similarity=hamming).simulate_walks()
+    walks = LazyRandomWalk(graph, similarity=[cosine]).simulate_walks()
 
     np_walks = np.array(walks)
 
-    np.save('temp/citeseer-lrw-walks', np_walks)
-
-    walks = RandomWalk(graph).simulate_walks()
-    np_walks = np.array(walks)
-
-    np.save('temp/citeseer-random-walks', np_walks)
+    np.save('temp/yelp-lrw-walks', np_walks)
 
 if __name__ == '__main__':
     main()
