@@ -1,4 +1,16 @@
+from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, FraudYelpDataset
+
+def load_arxiv():
+    dataset = DglNodePropPredDataset(name='ogbn-arxiv', root='temp')
+
+    graph, labels = dataset[0]
+
+    features = graph.ndata['feat'].numpy()
+    labels = labels.flatten().numpy()
+    graph = graph.to_networkx()
+
+    return graph, features, labels
 
 def load_cora():
     dataset = CoraGraphDataset(verbose=False)

@@ -3,12 +3,11 @@ import numpy as np
 from scipy.spatial.distance import hamming, cosine, euclidean
 
 from walker import LazyRandomWalk, RandomWalk
-from utils import load_citeseer, load_cora, load_yelp
-
+from utils import load_citeseer, load_cora, load_yelp, load_arxiv
 
 
 def main():
-    graph, features = load_yelp()
+    graph, features, _ = load_arxiv()
 
     for node, _ in graph.nodes(data=True):
         if hasattr(features[node], 'numpy'):
@@ -20,7 +19,7 @@ def main():
 
     np_walks = np.array(walks)
 
-    np.save('temp/yelp-lrw-walks', np_walks)
+    np.save('temp/arxiv-lrw-walks', np_walks)
 
 if __name__ == '__main__':
     main()
