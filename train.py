@@ -1,20 +1,20 @@
-import dgl
+import argparse
+import logging
 import numpy as np
 from node2vec import Node2Vec
 from gensim.models import Word2Vec
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from sklearn.linear_model import SGDClassifier, LogisticRegression
-
-from dgl.data import CoraGraphDataset, CiteseerGraphDataset, FraudYelpDataset
+from sklearn.linear_model import LogisticRegression
 from utils import load_arxiv, load_yelp, load_cora, load_citeseer
 
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-def run_personalized_walks(walk_path):
+def run_skipgram(walk_path):
 
     walks = np.load(walk_path).tolist()
     
-    skipgram = Word2Vec(sentences=walks, vector_size=128, negative=5, window=8, sg=1, workers=6)
+    skipgram = Word2Vec(sentences=walks, vector_size=128, negative=5, window=8, sg=1, workers=6, epochs=1)
     
     keys = list(map(int, skipgram.wv.index_to_key))
     keys.sort()
@@ -26,7 +26,7 @@ def run_personalized_walks(walk_path):
 def run_node2vec(graph):
     node2vec = Node2Vec(graph, dimensions=128, walk_length=80, num_walks=5, p=1, q=1, workers=6)
 
-    word2vec = node2vec.fit(negative=5, window=8)
+    word2vec = node2vec.fit(negative=5, window=8, epochs=1)
 
     keys = list(map(int, word2vec.wv.index_to_key))
     
@@ -64,19 +64,33 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
     print('\t\t\t: Test Accuracy: {:.4f} %'.format(np.mean(test_accuracies) * 100))
     print('-'*120)
 
+def train():
+    graph, _, _ = load_arxiv()
 
+    embeddings = run_skipgram(walk_path='temp/arxiv-lrw-walks.npy')
+    np.save('temp/embeddings/arxiv-lrw', embeddings)
 
-def main():
-    graph, _, labels = load_arxiv()
-
-    embeddings = run_personalized_walks(walk_path='temp/arxiv-lrw-walks.npy')
-
-    print('----- Lazy Random Walks -----')
-    run_classifier(embeddings, labels, train_ratio=0.8)
-
-    print('----- Node2Vec Walks -----')
     embeddings = run_node2vec(graph)
-    run_classifier(embeddings, labels, train_ratio=0.8)
+    np.save('temp/embeddings/arxiv-node2vec', embeddings)
+
+def experiment():
+    _, _, labels = load_arxiv()
+    lrw_emebdding = np.load('temp/embeddings/arxiv-lrw')
+    node2vec_emebdding = np.load('temp/embeddings/arxiv-node2vec')
+
+    print('----- LRW + SkipGram + Logistic Regression -----')
+    run_classifier(lrw_emebdding, labels, train_ratio=0.8)
+
+    print('----- Node2Vec + SkipGram + Logistic Regression -----')
+    run_classifier(node2vec_emebdding, labels, train_ratio=0.8)
 
 if __name__ == '__main__':
-    main()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--method', default='train', help='Task to run, experiment or train', choices=['train', 'experiment'], required=True)
+    args = parser.parse_args()
+
+    if args.method == 'train':
+        train()
+    else:
+        experiment()
