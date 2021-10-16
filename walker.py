@@ -41,14 +41,14 @@ class RandomWalk:
 
 class LazyRandomWalk:
     
-    def __init__(self, graph: nx.Graph, walk_length: int = 80, sigma: float = 0.2, alpha: float = 0.2, similarity = [cosine]) -> None:
+    def __init__(self, graph: nx.Graph, num_walks: int = 5, walk_length: int = 80, sigma: float = 0.2, alpha: float = 0.2, similarity = cosine) -> None:
         r"""
             Source: https://arxiv.org/abs/2008.03639
             section: III-A-3
         """
 
         self.graph = graph
-        self.num_walks = len(similarity)
+        self.num_walks = num_walks
         self.walk_length = walk_length
         self.sigma = sigma
         self.alpha = alpha
@@ -67,15 +67,14 @@ class LazyRandomWalk:
             feat_u = data['node_attr']
             w = []
             
-            for i in range(self.num_walks):
-                for neighbor in neighbors:
+            for neighbor in neighbors:
                     feat_v = self.graph.nodes[neighbor]['node_attr']
-                    wij = np.exp(self.similarity[i](feat_u, feat_v) / 2 * (self.sigma ** 2))
+                    wij = np.exp(self.similarity(feat_u, feat_v) / 2 * (self.sigma ** 2))
                     w.append(wij)
                 
-                di = sum(w)
+            di = sum(w)
 
-                self.graph.nodes[node]['d_{}'.format(i)] = di
+            self.graph.nodes[node]['d'] = di
 
     def simulate_walks(self):
         walks = []
@@ -96,20 +95,24 @@ class LazyRandomWalk:
             P = []
 
             feat_u = self.graph.nodes[current]['node_attr']
-            di = self.graph.nodes[current]['d_{}'.format(index)]
+            di = self.graph.nodes[current]['d']
             neighbors = self.graph.neighbors(current)
 
             for neighbor in neighbors:
                 feat_v = self.graph.nodes[neighbor]['node_attr']
                 
-                wij = np.exp(self.similarity[index](feat_u, feat_v) / 2 * (self.sigma ** 2))
+                wij = np.exp(- self.similarity(feat_u, feat_v) / 2 * (self.sigma ** 2))
 
                 P.append((neighbor, (self.alpha * wij) / di))
 
             P.append((current, (1 - self.alpha)))
 
-            next = max(P, key=itemgetter(1))[0]
-            
+            P.sort(key=lambda x:x[1])
+            try:
+                next = P[index][0]
+            except IndexError:
+                next = P[0][0]
+                
             walk.append(next)
         
         return walk
