@@ -15,7 +15,7 @@ def main():
         else:
             graph.nodes[node]['node_attr'] = features[node]
 
-    walks = LazyRandomWalk(graph, similarity=[cosine]).simulate_walks()
+    walks = LazyRandomWalk(graph, similarity=[cosine, euclidean]).simulate_walks()
 
     np_walks = np.array(walks)
 

@@ -7,29 +7,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, FraudYelpDataset
+from utils import load_arxiv, load_yelp, load_cora, load_citeseer
 
-
-def load_cora():
-    dataset = CoraGraphDataset(verbose=False)
-    graph = dataset[0].to_networkx().to_undirected()
-    labels = dataset[0].ndata['label'].numpy()
-
-    return graph, labels
-
-def load_citeseer():
-    dataset = CiteseerGraphDataset(verbose=False)
-    graph = dataset[0].to_networkx().to_undirected()
-    labels = dataset[0].ndata['label'].numpy()
-
-    return graph, labels
-
-def load_yelp():
-    dataset = FraudYelpDataset()
-
-    graph = dgl.to_homogeneous(dataset[0]).to_networkx().to_undirected()
-    labels = dataset[0].ndata['label'].numpy()
-
-    return graph, labels.ravel()
 
 def run_personalized_walks(walk_path):
 
@@ -45,7 +24,7 @@ def run_personalized_walks(walk_path):
     return np.array(vectors)
 
 def run_node2vec(graph):
-    node2vec = Node2Vec(graph, dimensions=128, walk_length=80, num_walks=10, p=0.5, q=0.25, workers=6)
+    node2vec = Node2Vec(graph, dimensions=128, walk_length=80, num_walks=5, p=1, q=1, workers=6)
 
     word2vec = node2vec.fit(negative=5, window=8)
 
@@ -70,7 +49,7 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
     classifier = LogisticRegression(multi_class='ovr', n_jobs=7)
             
     for _ in range(5):
-        classifier = classifier.fit(x_train, y_train, classes=labels)
+        classifier = classifier.fit(x_train, y_train)
                 
         train_acc = accuracy_score(y_train, classifier.predict(x_train))
         test_acc = accuracy_score(y_test, classifier.predict(x_test))
@@ -88,9 +67,9 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
 
 
 def main():
-    graph, labels = load_yelp()
+    graph, _, labels = load_arxiv()
 
-    embeddings = run_personalized_walks(walk_path='temp/citeseer-lrw-walks.npy')
+    embeddings = run_personalized_walks(walk_path='temp/arxiv-lrw-walks.npy')
 
     print('----- Lazy Random Walks -----')
     run_classifier(embeddings, labels, train_ratio=0.8)
