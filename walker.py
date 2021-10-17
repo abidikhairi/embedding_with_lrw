@@ -2,7 +2,6 @@ import numpy as np
 import networkx as nx
 from scipy.spatial.distance import cosine
 from scipy import sparse
-from scipy.sparse import csr_matrix
 
 from tqdm import tqdm
 

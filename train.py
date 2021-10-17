@@ -14,7 +14,7 @@ def run_skipgram(walk_path):
 
     walks = np.load(walk_path).tolist()
 
-    skipgram = Word2Vec(sentences=walks, vector_size=128, negative=5, window=8, sg=1, workers=6, epochs=10)
+    skipgram = Word2Vec(sentences=walks, vector_size=128, negative=5, window=8, sg=1, workers=6, epochs=1)
     
     keys = list(map(int, skipgram.wv.index_to_key))
     keys.sort()
@@ -33,7 +33,7 @@ def run_node2vec(graph):
     keys.sort()
 
     vectors = [word2vec.wv[key] for key in keys]
-    import pdb; pdb.set_trace()
+    
     return np.array(vectors)
 
 def run_classifier(embeddings, labels, train_ratio=0.8):
@@ -65,18 +65,18 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
     print('-'*120)
 
 def train():
-    graph, _, _ = load_arxiv()
+    graph, _, _ = load_cora()
 
-    embeddings = run_skipgram(walk_path='temp/arxiv-lrw-walks.npy')
-    np.save('temp/embeddings/arxiv-lrw', embeddings)
+    embeddings = run_skipgram(walk_path='temp/cora-lrw-walks.npy')
+    np.save('temp/embeddings/cora-lrw', embeddings)
 
     embeddings = run_node2vec(graph)
-    np.save('temp/embeddings/arxiv-node2vec', embeddings)
+    np.save('temp/embeddings/cora-node2vec', embeddings)
 
 def experiment():
-    _, _, labels = load_arxiv()
-    lrw_emebdding = np.load('temp/embeddings/arxiv-lrw.npy')
-    node2vec_emebdding = np.load('temp/embeddings/arxiv-node2vec.npy')
+    _, _, labels = load_cora()
+    lrw_emebdding = np.load('temp/embeddings/cora-lrw.npy')
+    node2vec_emebdding = np.load('temp/embeddings/cora-node2vec.npy')
 
     print('----- LRW + SkipGram + Logistic Regression -----')
     run_classifier(lrw_emebdding, labels, train_ratio=0.8)
