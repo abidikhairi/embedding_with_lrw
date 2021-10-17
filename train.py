@@ -13,12 +13,12 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 def run_skipgram(walk_path):
 
     walks = np.load(walk_path).tolist()
-    
-    skipgram = Word2Vec(sentences=walks, vector_size=128, negative=5, window=8, sg=1, workers=6, epochs=1)
+
+    skipgram = Word2Vec(sentences=walks, vector_size=128, negative=5, window=8, sg=1, workers=6, epochs=10)
     
     keys = list(map(int, skipgram.wv.index_to_key))
     keys.sort()
-
+    
     vectors = [skipgram.wv[key] for key in keys]
 
     return np.array(vectors)
@@ -33,7 +33,7 @@ def run_node2vec(graph):
     keys.sort()
 
     vectors = [word2vec.wv[key] for key in keys]
-
+    import pdb; pdb.set_trace()
     return np.array(vectors)
 
 def run_classifier(embeddings, labels, train_ratio=0.8):
@@ -48,7 +48,7 @@ def run_classifier(embeddings, labels, train_ratio=0.8):
 
     classifier = LogisticRegression(multi_class='ovr', n_jobs=7)
             
-    for _ in range(5):
+    for _ in range(1):
         classifier = classifier.fit(x_train, y_train)
                 
         train_acc = accuracy_score(y_train, classifier.predict(x_train))
@@ -75,8 +75,8 @@ def train():
 
 def experiment():
     _, _, labels = load_arxiv()
-    lrw_emebdding = np.load('temp/embeddings/arxiv-lrw')
-    node2vec_emebdding = np.load('temp/embeddings/arxiv-node2vec')
+    lrw_emebdding = np.load('temp/embeddings/arxiv-lrw.npy')
+    node2vec_emebdding = np.load('temp/embeddings/arxiv-node2vec.npy')
 
     print('----- LRW + SkipGram + Logistic Regression -----')
     run_classifier(lrw_emebdding, labels, train_ratio=0.8)

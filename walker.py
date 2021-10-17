@@ -1,8 +1,9 @@
 import numpy as np
 import networkx as nx
 from scipy.spatial.distance import cosine
+from scipy import sparse
+from scipy.sparse import csr_matrix
 
-from operator import itemgetter
 from tqdm import tqdm
 
 
@@ -53,66 +54,69 @@ class LazyRandomWalk:
         self.sigma = sigma
         self.alpha = alpha
         self.similarity = similarity
-
+        self.transition = None
+        self.nodes = np.arange(self.graph.number_of_nodes())
+        
         self.process_graph()
+
+    def weighting(self, u, v):
+        sigma = self.sigma
+
+        xu = self.graph.nodes[u]['node_attr']
+        xv = self.graph.nodes[v]['node_attr']
+        
+        return np.exp(- self.similarity(xu, xv) / 2 * (sigma ** 2))
 
     def process_graph(self):
         r"""
             Calculate transition probabilities, using node attributes and pre-defined 
-            node similarity function
+            node-wise similarity function
         """
+        alpha = self.alpha
+        adj = nx.adjacency_matrix(self.graph)
+        edges = np.stack(adj.nonzero()).T.tolist()
+        W = sparse.lil_matrix((self.graph.number_of_nodes(), self.graph.number_of_nodes()))
 
-        for node, data in tqdm(self.graph.nodes(data=True), desc='Processing Graph'):
-            neighbors = self.graph.neighbors(node)
-            feat_u = data['node_attr']
-            w = []
-            
-            for neighbor in neighbors:
-                    feat_v = self.graph.nodes[neighbor]['node_attr']
-                    wij = np.exp(self.similarity(feat_u, feat_v) / 2 * (self.sigma ** 2))
-                    w.append(wij)
-                
-            di = sum(w)
+        for u, v in tqdm(edges, desc='Computing Transition probabilities'):
+            score = self.weighting(u, v)
+            W[u, v] = score
 
-            self.graph.nodes[node]['d'] = di
+        rows = self.nodes
+        cols = self.nodes
+
+        alphas = np.ones(self.graph.number_of_nodes()) * (1 - alpha)
+        degress = 1./ np.array(list(dict(self.graph.degree()).values()))       
+        A = sparse.coo_matrix((alphas, (rows, cols)))
+        D = sparse.coo_matrix((degress, (rows, cols)))
+
+        P = (W + A) @ D
+
+        self.transition = P
 
     def simulate_walks(self):
         walks = []
 
-        for i in range(self.num_walks):
+        for _ in range(self.num_walks):
             for node in tqdm(self.graph.nodes(), desc='Generating Walks'):
-                walks.append(self._walk(node, i))
+                walks.append(self._walk(node))
         
         return walks
             
 
-    def _walk(self, start, index):
+    def _walk(self, start):
         length = self.walk_length
         walk = [start]
 
         while len(walk) < length:
             current = walk[-1]
-            P = []
+            probs = self.transition[current, :]
+            
+            probs = probs.todense() 
+            probs /= probs.sum() # normalize transition # TODO: try normalize by node degree
+            probs = np.array(probs)[0]
 
-            feat_u = self.graph.nodes[current]['node_attr']
-            di = self.graph.nodes[current]['d']
-            neighbors = self.graph.neighbors(current)
+            next = np.random.choice(self.nodes, p=probs)
 
-            for neighbor in neighbors:
-                feat_v = self.graph.nodes[neighbor]['node_attr']
-                
-                wij = np.exp(- self.similarity(feat_u, feat_v) / 2 * (self.sigma ** 2))
-
-                P.append((neighbor, (self.alpha * wij) / di))
-
-            P.append((current, (1 - self.alpha)))
-
-            P.sort(key=lambda x:x[1])
-            try:
-                next = P[index][0]
-            except IndexError:
-                next = P[0][0]
-                
             walk.append(next)
         
         return walk
