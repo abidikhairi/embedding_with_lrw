@@ -1,6 +1,31 @@
+import os
 import dgl
+import numpy as np
+import pandas as pd
+import networkx as nx
 from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, FraudYelpDataset
+
+def load_fifa():
+    datapath = os.environ['DATA_PATH']
+    fifa_dir = os.path.join(datapath, 'fifa', 'processed')
+    
+    nation_edges_file = os.path.join(fifa_dir, 'player_nation_player.csv')
+    club_edges_file = os.path.join(fifa_dir, 'player_club_player.csv')
+    features_file = os.path.join(fifa_dir, 'fifa21_features.npy')
+
+    features = np.load(features_file)
+    nation_edges = pd.read_csv(nation_edges_file)
+    club_edges = pd.read_csv(club_edges_file)
+    
+    graph = nx.Graph()
+
+    graph.add_edges_from(nation_edges.values)
+    graph.add_edges_from(club_edges.values)
+
+    # TODO: define a node-level task
+
+    return graph, features, None
 
 def get_similarity_func(name):
     import scipy.spatial.distance as distance
@@ -22,6 +47,8 @@ def load_data(name):
         return load_citeseer()
     elif name == 'yelp':
         return load_yelp()
+    elif name == 'fifa':
+        return load_fifa()
 
 def load_arxiv():
     dataset = DglNodePropPredDataset(name='ogbn-arxiv', root='temp')
