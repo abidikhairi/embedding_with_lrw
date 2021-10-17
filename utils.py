@@ -38,8 +38,8 @@ def load_cora():
     dataset = CoraGraphDataset(verbose=False)
 
     features = dataset[0].ndata['feat'].numpy()
+    labels = dataset[0].ndata['label'].numpy()
     graph = dataset[0].to_networkx().to_undirected()
-    labels = graph.ndata['label'].numpy()
 
     return graph, features, labels
 
