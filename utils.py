@@ -11,19 +11,19 @@ def load_fifa():
     fifa_dir = os.path.join(datapath, 'fifa', 'processed')
     
     nation_edges_file = os.path.join(fifa_dir, 'player_nation_player.csv')
-    club_edges_file = os.path.join(fifa_dir, 'player_club_player.csv')
+    # club_edges_file = os.path.join(fifa_dir, 'player_club_player.csv')
     features_file = os.path.join(fifa_dir, 'fifa21_features.npy')
     labels_file = os.path.join(fifa_dir, 'fifa21_labels.npy')
 
     features = np.load(features_file)
     labels = np.load(labels_file)
     nation_edges = pd.read_csv(nation_edges_file)
-    club_edges = pd.read_csv(club_edges_file)
+    # club_edges = pd.read_csv(club_edges_file)
     
     graph = nx.Graph()
 
     graph.add_edges_from(nation_edges.values)
-    graph.add_edges_from(club_edges.values)
+    # graph.add_edges_from(club_edges.values)
 
 
     return graph, features, labels
