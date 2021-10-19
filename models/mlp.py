@@ -27,38 +27,35 @@ class MLPTrainer():
         
     @torch.no_grad()
     def evaluate(self, x_test):
-        x_test = torch.tensor(x_test).unsqueeze(1).to(self.device)
-        
+        x_test = torch.tensor(x_test).to(self.device)
         logits = self.mlp(x_test)
-        _, preds = torch.argmax(logits)
+        _, preds = torch.max(logits, dim=1)
         
         return preds.numpy()
     
     def predict(self, x_test):
         return self.evaluate(x_test)
         
-    def train(self, epochs = 10, learning_rate = 0.001):
-        trainloader, _ = self.loader()
-        
+    def train(self, x_train, y_train, epochs = 10, learning_rate = 0.001):    
+        self.mlp.train()
         self.mlp.to(self.device)
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
-
+        
+        optimizer = torch.optim.Adam(self.mlp.parameters(), lr=learning_rate)
+        
         for _ in range(epochs):
-            for features, labels in trainloader:
-                self.mlp.train()
-                optimizer.zero_grad()
+            optimizer.zero_grad()
 
-                features, labels = features.to(self.device), labels.to(self.device)
-                logits = self.mlp(features)
+            features, labels = x_train, y_train
+            logits = self.mlp(features)
 
-                loss = self.criterion(logits, labels)
-                loss.backward()
-                optimizer.step()
+            loss = self.criterion(logits, labels)
+            loss.backward()
+            optimizer.step()
 
     def fit(self, x_train, y_train):
-        x_train = torch.tensor(x_train).unsqueeze(1).to(self.device)
-        y_train = torch.tensor(y_train).unsqueeze(1).to(self.device)
+        x_train = torch.tensor(x_train).to(self.device)
+        y_train = torch.tensor(y_train).long().to(self.device)
 
-        self.train()
+        self.train(x_train, y_train)
 
         return self
