@@ -4,8 +4,18 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from ogb.nodeproppred import DglNodePropPredDataset
+from ogb.linkproppred import DglLinkPropPredDataset
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, FraudYelpDataset
 
+def load_collab():
+    data_path = os.path.realpath('/home/flursky/.dgl')
+
+    dataset = DglLinkPropPredDataset(name='ogbl-collab', root=data_path)
+    graph = dataset[0]
+    features = graph.ndata['feat'].numpy()
+    graph = graph.to_networkx()
+
+    return graph, features, None
 
 def load_fifa():
     datapath = os.environ['DATA_PATH']
@@ -50,6 +60,8 @@ def load_data(name):
         return load_yelp()
     elif name == 'fifa':
         return load_fifa()
+    elif name == 'collab':
+        return load_collab()
 
 def load_arxiv():
     dataset = DglNodePropPredDataset(name='ogbn-arxiv', root='temp')
