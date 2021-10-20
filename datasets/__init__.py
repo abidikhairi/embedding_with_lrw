@@ -1,0 +1,1 @@
+from datasets.link_prediction import LinkPredictionDataset
