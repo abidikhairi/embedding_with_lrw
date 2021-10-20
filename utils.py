@@ -7,6 +7,18 @@ from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, FraudYelpDataset
 
 
+def normalize(x):
+    """normalize a set of vectors to have unit length
+
+    Args:
+        x (np.ndarray): array or matrix
+
+    Returns:
+        np.ndarray: normalized array or matrix
+    """    
+    norm = x / np.linalg.norm(x)
+    return norm
+
 def load_fifa():
     datapath = os.environ['DATA_PATH']
     fifa_dir = os.path.join(datapath, 'fifa', 'processed')
