@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+from gensim.models import KeyedVectors
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 
@@ -15,8 +16,17 @@ def get_model(name, workers):
 def main(args):
     title = args.title
     _, _, labels = load_data(args.dataset)
-    embedding = np.load(args.embedding)
     reduction = get_model(args.algorithm, args.workers)
+
+    if args.embedding.startswith('data'):
+        
+        wv = KeyedVectors.load_word2vec_format(args.embedding)
+        keys = list(map(int, wv.index_to_key))
+        keys.sort()
+
+        embedding = [wv[index] for index in keys]
+    else:
+        embedding = np.load(args.embedding)
 
     projection = reduction.fit_transform(embedding, reduction)
     
