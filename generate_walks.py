@@ -25,7 +25,7 @@ def main(args):
 
     np_walks = np.array(walks)
 
-    np.save('temp/{}-lrw-walks'.format(dataset_name), np_walks)
+    np.save('temp/{}-{}-lrw-walks'.format(dataset_name, args.similarity), np_walks)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
