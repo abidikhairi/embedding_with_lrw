@@ -1,6 +1,7 @@
 import os
 import argparse
 import numpy as np
+from gensim.models import KeyedVectors
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
 
@@ -18,7 +19,16 @@ def main(args):
 
     _, _, true_labels = load_data(dataset)
 
-    features = np.load(emb_file)
+    if emb_file.startswith('data'):
+        
+        wv = KeyedVectors.load_word2vec_format(emb_file)
+        keys = list(map(int, wv.index_to_key))
+        keys.sort()
+
+        features = [wv[index] for index in keys]
+    else:
+        features = np.load(emb_file)
+
     
     amis = []
     nmis = []
@@ -35,8 +45,8 @@ def main(args):
         )
         
     print("{} Dataset: {} method".format(dataset.capitalize(), method))
-    print("AMI: ", np.mean(amis))
-    print("NMI: ", np.mean(nmis))
+    print("AMI: {:.2f} %".format(np.mean(amis) * 100))
+    print("NMI: {:.2f} %".format(np.mean(nmis) * 100))
     
 
 
