@@ -41,27 +41,22 @@ def run_classifier(embeddings, labels, train_ratio = 0.8, workers = 1, runs = 1)
 
 def experiment(args):
     dataset = args.dataset
-    lrw_emebdding_path = args.lrw_embedding
-    node2vec_embedding_path = args.node2vec_embedding
+    emebdding_path = args.embedding
     workers = args.workers
     runs = args.runs 
     train_size = args.train_size 
     
     _, _, labels = load_data(dataset)
-    lrw_emebdding = np.load(lrw_emebdding_path)
-    node2vec_emebdding = np.load(node2vec_embedding_path)
-
+    embedding = np.load(emebdding_path)
+    
     print('----- LRW + SkipGram + Logistic Regression -----')
-    run_classifier(lrw_emebdding, labels, train_ratio=train_size, workers=workers, runs=runs)
+    run_classifier(embedding, labels, train_ratio=train_size, workers=workers, runs=runs)
 
-    print('----- Node2Vec + SkipGram + Logistic Regression -----')
-    run_classifier(node2vec_emebdding, labels, train_ratio=train_size, workers=workers, runs=runs)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='run experiment with logistic regression classifier')
 
-    parser.add_argument('--lrw_embedding', type=str, required=True, help='lrw embedding file')
-    parser.add_argument('--node2vec_embedding', type=str, required=True, help='node2vec embedding file')
+    parser.add_argument('--embedding', type=str, required=True, help='embedding file')
     parser.add_argument('--dataset', type=str, required=True, help='dataset name')
     parser.add_argument('--train_size', type=float, required=False, default=0.8, help='train size. Default: 80%')
     parser.add_argument('--workers', type=int, required=False, default=3, help='number of cpu workers')
